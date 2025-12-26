@@ -1,6 +1,6 @@
 # FTR - Pós-gradução Tech Developer 360º - Desafio Prático da Fase 3 - Financy
 
-Projeto desenvolvido para o desafio prático da fase 1 do curso de Pós-graduação Tech Developer 360º da Faculdade de Tecnologia Rocketseat.
+Projeto desenvolvido para o desafio prático da fase 3 do curso de Pós-graduação Tech Developer 360º da Faculdade de Tecnologia Rocketseat.
 
 O objetivo é criar uma aplicação que permita a organização de finanças, com gestão de transações e categorias.
 
