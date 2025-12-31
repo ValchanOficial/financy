@@ -19,3 +19,6 @@
 - React
 - Vite
 - GraphQL
+- ShadcnUI
+- TailwindCSS
+- Zustand
