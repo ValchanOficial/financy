@@ -26,7 +26,7 @@ export interface Transaction {
   id: string;
   amount: number;
   description: string;
-  date: Date;
+  date: string;
   type: string;
   userId: string;
   user?: User;

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LIST_TRANSACTIONS } from "@/lib/graphql/queries/Transaction";
 import { Transaction } from "@/types";
-import { colorVariants, formatAmountByType, formatDate, formatType, IconsTypes } from "@/utils";
+import { colorVariants, filterByCategory, filterByPage, filterByPeriod, filterBySearch, filterByType, formatAmountByType, formatDate, formatDateMonthYear, formatType, IconsTypes } from "@/utils";
 import { useQuery } from "@apollo/client/react";
 import { ChevronLeft, ChevronRight, Plus, SquarePen, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -34,46 +34,19 @@ export function Transacoes() {
     skip: 10,
     limit: 10,
   })
+  const [periods, setPeriods] = useState<{ label: string, value: string }[]>([])
 
   const { data, loading, refetch } = useQuery<{ listTransactions: Transaction[] }>(LIST_TRANSACTIONS)
 
   useEffect(() => {
     // Lógica para buscar as transações com base nos filtros aplicados
-    console.log({ search, type, category, period, pages });
-    const filterBySearch = (transaction: Transaction) => {
-      return transaction.description.toLowerCase().includes(search.toLowerCase());
-    };
-
-    const filterByType = (transaction: Transaction) => {
-      if (type === "todos" || type === "") return true;
-      console.log(transaction.type.toLowerCase(), type);
-      return transaction.type.toLowerCase() === type.charAt(0);
-    };
-    
-    const filterByCategory = (transaction: Transaction) => {
-      if (category === "todas" || category === "") return true;
-      return transaction.category?.name.toLowerCase() === category;
-    };
-
-    const filterByPeriod = (transaction: Transaction) => {
-      if (period === "todos" || period === "") return true;
-      return true;
-    }
-
-    const filterByPage = (transaction: Transaction, index: number) => {
-      const start = pages.currentPage * pages.limit;
-      const end = start + pages.limit;
-      return index >= start && index < end;
-    }
-
     setFiltered(transactions.filter((transaction, index) => 
-      filterBySearch(transaction) && 
-      filterByType(transaction) && 
-      filterByCategory(transaction) && 
-      filterByPeriod(transaction) &&
-      filterByPage(transaction, index)
+      filterBySearch(transaction, search) && 
+      filterByType(transaction, type) && 
+      filterByCategory(transaction, category) && 
+      filterByPeriod(transaction, period)
     ));
-  }, [search, type, category, period, pages])
+  }, [transactions, search, type, category, period])
 
   useEffect(() => {
     setTransactions(data?.listTransactions || [])
@@ -82,6 +55,15 @@ export function Transacoes() {
       index === self.findIndex((c) => c.id === cat.id)
     ).map(cat => ({ label: cat.name, value: cat.name.toLowerCase() }))
     setCategories([{ label: "Todas", value: "todas" }, ...cats || []])
+    const periodsList = new Set(data?.listTransactions.map(t => t.date))
+    const removeDuplicatedMonthYear = new Set<string>();
+    periodsList.forEach(date => {
+      const formatted = formatDateMonthYear(date);
+      removeDuplicatedMonthYear.add(formatted);
+    });
+    setPeriods([{ label: "Todos", value: "todos" }, ...Array.from(removeDuplicatedMonthYear).map(date => {
+      return { label: date, value: date.toLowerCase() };
+    }) || []])
     setPages({
       currentPage: 0,
       totalPages: Math.ceil((data?.listTransactions || []).length / 10),
@@ -94,13 +76,6 @@ export function Transacoes() {
     { label: "Todos", value: "todos" },
     { label: "Entrada", value: "entrada" },
     { label: "Saida", value: "saida" },
-  ]
-
-  const periods = [
-    { label: "Todos", value: "todos" },
-    { label: "Última semana", value: "semana" },
-    { label: "Último mês", value: "mes" },
-    { label: "Último ano", value: "ano" },
   ]
 
   const handleDeleteTransaction = (transactionId: string) => {
@@ -117,8 +92,14 @@ export function Transacoes() {
     setPages((prev) => ({
       ...prev,
       currentPage: pageNumber,
-      skip: pageNumber * prev.limit,
     }))
+    setFiltered(transactions.filter((transaction, index) => 
+      filterByPage(pageNumber, index, pages.limit) &&
+      filterBySearch(transaction, search) && 
+      filterByType(transaction, type) && 
+      filterByCategory(transaction, category) && 
+      filterByPeriod(transaction, period)
+    ));
   }
 
   if (loading || data?.listTransactions === undefined) {
@@ -222,7 +203,7 @@ export function Transacoes() {
                   <Button
                     variant="outline"
                     className="text-gray-600"
-                    disabled={pages.currentPage === pages.totalPages - 1}
+                    disabled={pages.currentPage === pages.totalPages - 1 || filtered.length < pages.limit}
                     onClick={() => handleSetPage(pages.currentPage + 1)}
                   >
                     <ChevronRight size={16}/>

@@ -1,3 +1,4 @@
+import { Transaction } from '@/types';
 import { CircleArrowDown, CircleArrowUp } from 'lucide-react';
 
 export const colorVariants: Record<string, string> = {
@@ -56,11 +57,65 @@ export const formatAmountByType = (amount: number, type: string) => {
   return type === 'S' ? `- ${formattedAmount}` : `+ ${formattedAmount}`;
 };
 
+// 2025-12-29T00:00:00.000Z to 29/12/2025
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR');
+  const [year, month, day] = dateString.split('T')[0].split('-');
+  return `${day}/${month}/${year}`;
+};
+
+// 2025-12-29T00:00:00.000Z to Dez/2025
+export const formatDateMonthYear = (dateString: string) => {
+  const [year, month] = dateString.split('T')[0].split('-');
+  const monthNames = [
+    'Jan',
+    'Fev',
+    'Mar',
+    'Abr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Out',
+    'Nov',
+    'Dez',
+  ];
+  return `${monthNames[parseInt(month) - 1]}/${year}`;
 };
 
 export const formatType = (type: string) => {
   return typesMap[type as keyof typeof typesMap] || type;
+};
+
+export const filterBySearch = (transaction: Transaction, search: string) => {
+  return transaction.description.toLowerCase().includes(search.toLowerCase());
+};
+
+export const filterByType = (transaction: Transaction, type: string) => {
+  if (type === 'todos' || type === '') return true;
+  console.log(transaction.type.toLowerCase(), type);
+  return transaction.type.toLowerCase() === type.charAt(0);
+};
+
+export const filterByCategory = (
+  transaction: Transaction,
+  category: string
+) => {
+  if (category === 'todas' || category === '') return true;
+  return transaction.category?.name.toLowerCase() === category;
+};
+
+export const filterByPeriod = (transaction: Transaction, period: string) => {
+  if (period === 'todos' || period === '') return true;
+  return formatDateMonthYear(transaction.date).toLowerCase() === period;
+};
+
+export const filterByPage = (
+  pageNumber: number,
+  index: number,
+  limit: number
+) => {
+  const start = pageNumber * limit;
+  const end = start + limit;
+  return index >= start && index < end;
 };
