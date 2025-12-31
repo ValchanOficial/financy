@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LIST_TRANSACTIONS } from "@/lib/graphql/queries/Transaction";
 import { Transaction } from "@/types";
-import { colorVariants, formatAmount, formatDate, formatType, IconsTypes } from "@/utils";
+import { colorVariants, formatAmountByType, formatDate, formatType, IconsTypes } from "@/utils";
 import { useQuery } from "@apollo/client/react";
 import { Plus, SquarePen, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -165,7 +165,7 @@ export function Transacoes() {
                     <TableCell className={`text-right p-6  font-medium ${transaction.type === "E" ? "text-green-base" : "text-red-base"}`}>
                       <div className="flex flex-row items-center justify-end gap-2"><IconComponent size={16}/>{formatType(transaction.type)}</div>
                     </TableCell>
-                    <TableCell className="text-right p-6 font-semibold">{formatAmount(transaction.amount, transaction.type)}</TableCell>
+                    <TableCell className="text-right p-6 font-semibold">{formatAmountByType(transaction.amount, transaction.type)}</TableCell>
                     <TableCell className="text-right p-6">
                       <div className="flex flex-row items-center justify-end gap-2">
                         <Button variant="outline" className="text-danger" onClick={() => handleDeleteTransaction(transaction.id)}>

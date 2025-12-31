@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { LIST_CATEGORIES } from "@/lib/graphql/queries/Category";
 import { LIST_TRANSACTIONS } from "@/lib/graphql/queries/Transaction";
 import { Category, Transaction } from "@/types";
-import { colorVariants, formatAmount, formatDate, IconsTypes } from "@/utils";
+import { colorVariants, formatAmount, formatAmountByType, formatDate, IconsTypes } from "@/utils";
 import { useQuery } from "@apollo/client/react";
 import { ArrowDownCircle, ArrowUpCircle, ChevronRight, Plus, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -17,6 +17,18 @@ export function Dashboard() {
 
   const { data: dataT, loading: loadingT, refetch: refetchT } = useQuery<{ listTransactions: Transaction[] }>(LIST_TRANSACTIONS)
   const { data: dataC, loading: loadingC, refetch: refetchC } = useQuery<{ listCategories: Category[] }>(LIST_CATEGORIES)
+
+  const values = {
+    total: dataT?.listTransactions.reduce((acc, transaction) => {
+      return transaction.type === "E" ? acc + transaction.amount : acc - transaction.amount;
+    }, 0) || 0,
+    income: dataT?.listTransactions.reduce((acc, transaction) => {
+      return transaction.type === "E" ? acc + transaction.amount : acc;
+    }, 0) || 0,
+    expense: dataT?.listTransactions.reduce((acc, transaction) => {
+      return transaction.type === "S" ? acc + transaction.amount : acc;
+    }, 0) || 0,
+  }
 
   useEffect(() => {
     refetchT();
@@ -36,21 +48,21 @@ export function Dashboard() {
             <Wallet size={24} className="text-purple-base"/>
             <div className="flex flex-col gap-2">            
               <CardDescription className="text-sm text-gray-500">SALDO TOTAL</CardDescription>
-              <CardTitle className="font-bold text-3xl text-gray-800">R$ 12.847,32</CardTitle>
+              <CardTitle className="font-bold text-3xl text-gray-800">{formatAmount(values.total)}</CardTitle>
             </div>
           </Card>
           <Card className="uppercase flex flex-row items-start justify-left p-6 w-full">
             <ArrowUpCircle size={24} className="text-green-base" />
             <div className="flex flex-col gap-2">            
               <CardDescription className="text-sm text-gray-500">RECEITAS DO MÊS</CardDescription>
-              <CardTitle className="font-bold text-3xl text-gray-800">R$ 10.667,87</CardTitle>
+              <CardTitle className="font-bold text-3xl text-gray-800">{formatAmount(values.income)}</CardTitle>
             </div>
           </Card>
           <Card className="uppercase flex flex-row items-start justify-left p-6 w-full">
             <ArrowDownCircle size={24} className={`text-red-base`}/>
             <div className="flex flex-col gap-2">            
               <CardDescription className="text-sm text-gray-500">DESPESAS DO MÊS</CardDescription>
-              <CardTitle className="font-bold text-3xl text-gray-800">R$ 2.180,45</CardTitle>
+              <CardTitle className="font-bold text-3xl text-gray-800">{formatAmount(values.expense)}</CardTitle>
             </div>
           </Card>
         </div>
@@ -93,7 +105,7 @@ export function Dashboard() {
                         <CardTitle className={`${colorVariants[transaction.category.color]} w-fit rounded-xl px-3 py-1 font-medium text-sm`}>{transaction.category.name}</CardTitle>
                       </TableCell>
                       <TableCell className="text-right p-6 font-semibold">
-                        {formatAmount(transaction.amount, transaction.type)}
+                        {formatAmountByType(transaction.amount, transaction.type)}
                         <IconArrow size={16} className={`inline-block ml-2 ${transaction.type === "E" ? "text-green-base" : "text-red-base"}`}/>
                       </TableCell>
                   

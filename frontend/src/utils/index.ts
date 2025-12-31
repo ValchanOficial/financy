@@ -40,7 +40,15 @@ export const IconsTypes = {
   CircleArrowUp: CircleArrowUp,
 };
 
-export const formatAmount = (amount: number, type: string) => {
+export const formatAmount = (amount: number) => {
+  const formattedAmount = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(Math.abs(amount));
+  return formattedAmount;
+};
+
+export const formatAmountByType = (amount: number, type: string) => {
   const formattedAmount = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
