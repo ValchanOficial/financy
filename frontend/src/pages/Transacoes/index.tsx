@@ -9,7 +9,7 @@ import { LIST_TRANSACTIONS } from "@/lib/graphql/queries/Transaction";
 import { Transaction } from "@/types";
 import { colorVariants, formatAmountByType, formatDate, formatType, IconsTypes } from "@/utils";
 import { useQuery } from "@apollo/client/react";
-import { Plus, SquarePen, Trash } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, SquarePen, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CreateTransactionDialog } from "./components/CreateTransactionDialog";
 import { DeleteTransactionDialog } from "./components/DeleteTransactionDialog";
@@ -28,12 +28,18 @@ export function Transacoes() {
   const [transaction, setTransaction] = useState<Transaction>({} as Transaction)
   const [openEditTransactionDialog, setOpenEditTransactionDialog] = useState(false)
   const [openDeleteTransactionDialog, setOpenDeleteTransactionDialog] = useState(false)
+  const [pages, setPages] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    skip: 10,
+    limit: 10,
+  })
 
   const { data, loading, refetch } = useQuery<{ listTransactions: Transaction[] }>(LIST_TRANSACTIONS)
 
   useEffect(() => {
     // Lógica para buscar as transações com base nos filtros aplicados
-    console.log({ search, type, category, period });
+    console.log({ search, type, category, period, pages });
     const filterBySearch = (transaction: Transaction) => {
       return transaction.description.toLowerCase().includes(search.toLowerCase());
     };
@@ -53,13 +59,21 @@ export function Transacoes() {
       if (period === "todos" || period === "") return true;
       return true;
     }
-    setFiltered(transactions.filter(transaction => 
+
+    const filterByPage = (transaction: Transaction, index: number) => {
+      const start = pages.currentPage * pages.limit;
+      const end = start + pages.limit;
+      return index >= start && index < end;
+    }
+
+    setFiltered(transactions.filter((transaction, index) => 
       filterBySearch(transaction) && 
       filterByType(transaction) && 
       filterByCategory(transaction) && 
-      filterByPeriod(transaction)
+      filterByPeriod(transaction) &&
+      filterByPage(transaction, index)
     ));
-  }, [search, type, category, period])
+  }, [search, type, category, period, pages])
 
   useEffect(() => {
     setTransactions(data?.listTransactions || [])
@@ -68,6 +82,12 @@ export function Transacoes() {
       index === self.findIndex((c) => c.id === cat.id)
     ).map(cat => ({ label: cat.name, value: cat.name.toLowerCase() }))
     setCategories([{ label: "Todas", value: "todas" }, ...cats || []])
+    setPages({
+      currentPage: 0,
+      totalPages: Math.ceil((data?.listTransactions || []).length / 10),
+      skip: 10,
+      limit: 10,
+    })
   }, [data])
 
   const types = [
@@ -91,6 +111,14 @@ export function Transacoes() {
   const handleEditTransaction = (transaction: Transaction) => {
     setTransaction(transaction)
     setOpenEditTransactionDialog(true)
+  }
+
+  const handleSetPage = (pageNumber: number) => {
+    setPages((prev) => ({
+      ...prev,
+      currentPage: pageNumber,
+      skip: pageNumber * prev.limit,
+    }))
   }
 
   if (loading || data?.listTransactions === undefined) {
@@ -146,7 +174,7 @@ export function Transacoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length > 0 && filtered.map((transaction) => {
+              {filtered.length > 0 && filtered.slice(0, 10).map((transaction) => {
                 const IconComponent = transaction.type === "E" ? IconsTypes['CircleArrowUp'] : IconsTypes['CircleArrowDown'];
                 const IconCategory = Icons[transaction?.category?.icon as keyof typeof Icons];
 
@@ -180,10 +208,26 @@ export function Transacoes() {
                 )
               })}
             </TableBody>
-            <TableFooter>
+            <TableFooter className="bg-white">
               <TableRow>
-                <TableCell colSpan={5} className="p-6">1 a {filtered.length}</TableCell>
-                <TableCell className="text-right p-6"> {transactions.length} resultados</TableCell>
+                <TableCell colSpan={5} className="p-6">{pages.skip} a {pages.skip + filtered.length} | {transactions.length} resultados</TableCell>
+                <TableCell className="text-right p-6 flex flex-row items-center justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    className="text-gray-600" disabled={pages.currentPage === 0}
+                    onClick={() => handleSetPage(pages.currentPage - 1)}
+                  >
+                    <ChevronLeft size={16}/>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-gray-600"
+                    disabled={pages.currentPage === pages.totalPages - 1}
+                    onClick={() => handleSetPage(pages.currentPage + 1)}
+                  >
+                    <ChevronRight size={16}/>
+                  </Button>
+                </TableCell>
               </TableRow>
             </TableFooter>
           </Table>

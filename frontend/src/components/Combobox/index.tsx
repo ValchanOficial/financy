@@ -36,7 +36,7 @@ export function Combobox({ items, value, setType }: {
         >
           {value
             ? items.find((item) => item.value === value)?.label
-            : "Selecione o tipo..."}
+            : "Selecione"}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
