@@ -14,6 +14,7 @@ import {
 import { GqlUser } from '../graphql/decorators/user.decorator';
 import { IsAuth } from '../middlewares/auth.middleware';
 import { CategoryModel } from '../models/category.model';
+import { TransactionModel } from '../models/transaction.model';
 import { UserModel } from '../models/user.model';
 import { CategoryService } from '../services/category.service';
 import { TransactionService } from '../services/transaction.service';
@@ -68,5 +69,20 @@ export class CategoryResolver {
   @FieldResolver(() => Number)
   async countTransactions(@Root() category: CategoryModel): Promise<number> {
     return this.transactionService.countTransactionsInCategory(category.id);
+  }
+
+  @FieldResolver(() => Number)
+  async transactions(
+    @Root() category: CategoryModel
+  ): Promise<TransactionModel[]> {
+    return this.transactionService.listTransactionsByCategory(category.id);
+  }
+
+  @FieldResolver(() => Number)
+  async totalAmount(@Root() category: CategoryModel): Promise<number> {
+    const result = await this.transactionService.totalAmountByCategory(
+      category.id
+    );
+    return result._sum.amount || 0;
   }
 }

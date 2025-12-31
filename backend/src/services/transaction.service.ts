@@ -38,6 +38,25 @@ export class TransactionService {
     });
   }
 
+  async listTransactionsByCategory(categoryId: string) {
+    return prismaClient.transaction.findMany({
+      where: {
+        categoryId,
+      },
+    });
+  }
+
+  async totalAmountByCategory(categoryId: string) {
+    return prismaClient.transaction.aggregate({
+      where: {
+        categoryId,
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+  }
+
   async findTransaction(id: string) {
     return prismaClient.transaction.findUnique({
       where: { id },

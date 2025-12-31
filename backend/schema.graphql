@@ -11,6 +11,7 @@ type CategoryModel {
   icon: String!
   id: ID!
   name: String!
+  totalAmount: Float!
   transactions: [TransactionModel!]
   updatedAt: DateTimeISO!
   user: UserModel
