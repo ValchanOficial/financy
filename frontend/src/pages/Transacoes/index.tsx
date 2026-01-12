@@ -1,15 +1,16 @@
 import { Combobox } from "@/components/Combobox";
 import Icons from "@/components/Icons";
 import { InputWithLabel } from "@/components/InputWithLabel";
+import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LIST_TRANSACTIONS } from "@/lib/graphql/queries/Transaction";
 import { Transaction } from "@/types";
-import { colorVariants, filterByCategory, filterByPage, filterByPeriod, filterBySearch, filterByType, formatAmountByType, formatDate, formatDateMonthYear, formatType, IconsTypes } from "@/utils";
+import { colorVariants, filterByCategory, filterByPeriod, filterBySearch, filterByType, formatAmountByType, formatDate, formatDateMonthYear, formatType, IconsTypes, paginate } from "@/utils";
 import { useQuery } from "@apollo/client/react";
-import { ChevronLeft, ChevronRight, Plus, SquarePen, Trash } from "lucide-react";
+import { Plus, SquarePen, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CreateTransactionDialog } from "./components/CreateTransactionDialog";
 import { DeleteTransactionDialog } from "./components/DeleteTransactionDialog";
@@ -28,26 +29,25 @@ export function Transacoes() {
   const [transaction, setTransaction] = useState<Transaction>({} as Transaction)
   const [openEditTransactionDialog, setOpenEditTransactionDialog] = useState(false)
   const [openDeleteTransactionDialog, setOpenDeleteTransactionDialog] = useState(false)
-  const [pages, setPages] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    skip: 10,
-    limit: 10,
-  })
+  const [currentPage, setCurrentPage] = useState(1)
   const [periods, setPeriods] = useState<{ label: string, value: string }[]>([])
 
   const { data, loading, refetch } = useQuery<{ listTransactions: Transaction[] }>(LIST_TRANSACTIONS)
 
+  const PAGE_SIZE = 10;
+  const { data: paginatedData, totalPages, totalItems } = paginate(filtered, currentPage, PAGE_SIZE)
+
   useEffect(() => {
     // Lógica para buscar as transações com base nos filtros aplicados
-    setFiltered(transactions.filter((transaction, index) => 
+    setFiltered(transactions.filter((transaction) =>
       filterBySearch(transaction, search) && 
       filterByType(transaction, type) && 
       filterByCategory(transaction, category) && 
-      filterByPeriod(transaction, period)
+      filterByPeriod(transaction, period) 
     ));
-  }, [transactions, search, type, category, period])
+  }, [transactions, search, type, category, period, currentPage])
 
+  
   useEffect(() => {
     setTransactions(data?.listTransactions || [])
     setFiltered(data?.listTransactions || [])
@@ -64,12 +64,6 @@ export function Transacoes() {
     setPeriods([{ label: "Todos", value: "todos" }, ...Array.from(removeDuplicatedMonthYear).map(date => {
       return { label: date, value: date.toLowerCase() };
     }) || []])
-    setPages({
-      currentPage: 0,
-      totalPages: Math.ceil((data?.listTransactions || []).length / 10),
-      skip: 10,
-      limit: 10,
-    })
   }, [data])
 
   const types = [
@@ -86,20 +80,6 @@ export function Transacoes() {
   const handleEditTransaction = (transaction: Transaction) => {
     setTransaction(transaction)
     setOpenEditTransactionDialog(true)
-  }
-
-  const handleSetPage = (pageNumber: number) => {
-    setPages((prev) => ({
-      ...prev,
-      currentPage: pageNumber,
-    }))
-    setFiltered(transactions.filter((transaction, index) => 
-      filterByPage(pageNumber, index, pages.limit) &&
-      filterBySearch(transaction, search) && 
-      filterByType(transaction, type) && 
-      filterByCategory(transaction, category) && 
-      filterByPeriod(transaction, period)
-    ));
   }
 
   if (loading || data?.listTransactions === undefined) {
@@ -155,7 +135,7 @@ export function Transacoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length > 0 && filtered.slice(0, 10).map((transaction) => {
+              {paginatedData.length > 0 && paginatedData.slice(0, 10).map((transaction) => {
                 const IconComponent = transaction.type === "E" ? IconsTypes['CircleArrowUp'] : IconsTypes['CircleArrowDown'];
                 const IconCategory = Icons[transaction?.category?.icon as keyof typeof Icons];
 
@@ -191,23 +171,9 @@ export function Transacoes() {
             </TableBody>
             <TableFooter className="bg-white">
               <TableRow>
-                <TableCell colSpan={5} className="p-6">{pages.skip} a {pages.skip + filtered.length} | {transactions.length} resultados</TableCell>
+                <TableCell colSpan={5} className="p-6">{(currentPage - 1) * PAGE_SIZE + 1} a {Math.min(currentPage * PAGE_SIZE, totalItems)} | {totalItems} resultados</TableCell>
                 <TableCell className="text-right p-6 flex flex-row items-center justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    className="text-gray-600" disabled={pages.currentPage === 0}
-                    onClick={() => handleSetPage(pages.currentPage - 1)}
-                  >
-                    <ChevronLeft size={16}/>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="text-gray-600"
-                    disabled={pages.currentPage === pages.totalPages - 1 || filtered.length < pages.limit}
-                    onClick={() => handleSetPage(pages.currentPage + 1)}
-                  >
-                    <ChevronRight size={16}/>
-                  </Button>
+                  <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </TableCell>
               </TableRow>
             </TableFooter>

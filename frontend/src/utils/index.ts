@@ -110,12 +110,43 @@ export const filterByPeriod = (transaction: Transaction, period: string) => {
   return formatDateMonthYear(transaction.date).toLowerCase() === period;
 };
 
-export const filterByPage = (
-  pageNumber: number,
-  index: number,
-  limit: number
-) => {
-  const start = pageNumber * limit;
-  const end = start + limit;
-  return index >= start && index < end;
-};
+export function filterByPage<T>(
+  items: T[],
+  page: number,
+  pageSize: number
+): T[] {
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  return items.slice(startIndex, endIndex);
+}
+
+export function getTotalPages(totalItems: number, pageSize: number): number {
+  return Math.ceil(totalItems / pageSize);
+}
+
+export function paginate<T>(
+  items: T[],
+  page: number,
+  pageSize: number
+): {
+  data: T[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+} {
+  const totalItems = items.length;
+  const totalPages = getTotalPages(totalItems, pageSize);
+  const currentPage = Math.max(1, Math.min(page, totalPages));
+  const data = filterByPage(items, currentPage, pageSize);
+
+  return {
+    data,
+    currentPage,
+    totalPages,
+    totalItems,
+    hasNextPage: currentPage < totalPages,
+    hasPreviousPage: currentPage > 1,
+  };
+}
