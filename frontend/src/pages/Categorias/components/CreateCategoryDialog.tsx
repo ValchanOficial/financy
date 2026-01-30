@@ -109,7 +109,7 @@ export function CreateCategoryDialog({
             </Label>
             {Object.entries(Icons).length > 0 && (
               <div className="grid grid-cols-8 gap-2 mb-2">
-                {Object.entries(Icons).map(([key, IconComponent]) => (
+                {Object.entries(Icons).filter(([key]) => key !== 'Question').map(([key, IconComponent]) => (
                   <Card key={key} 
                     className={`p-2 border rounded flex items-center ${
                       icon === key ? 'border-brand-base' : 'border-transparent'
