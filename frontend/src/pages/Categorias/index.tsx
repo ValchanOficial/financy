@@ -29,7 +29,7 @@ export function Categorias() {
     categorias: data?.listCategories || []
   }
 
-  const Icon = Icons[response.categoriaMaisUtilizada?.icon as keyof typeof Icons];
+  const Icon = Icons[response.categoriaMaisUtilizada?.icon as keyof typeof Icons] || Icons.Question;
 
   const handleDeleteCategory = async (categoryId: string) => {
     setCategory({ id: categoryId } as Category)
@@ -76,7 +76,7 @@ export function Categorias() {
           <Card className="uppercase flex flex-row items-start justify-left p-6 w-full">
             <Icon size={24} className={`text-${response.categoriaMaisUtilizada?.color}-base`}/>
             <div className="flex flex-col gap-2">            
-              <CardTitle className="font-bold text-3xl text-gray-800">{response.categoriaMaisUtilizada?.name}</CardTitle>
+              <CardTitle className="font-bold text-3xl text-gray-800">{response.categoriaMaisUtilizada?.name || 'Nenhuma'}</CardTitle>
               <CardDescription className="text-sm text-gray-500">categoria mais utilizada</CardDescription>
             </div>
           </Card>
@@ -84,7 +84,7 @@ export function Categorias() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {response.categorias.map((categoria) => {
-            const Icon = Icons[categoria.icon as keyof typeof Icons];
+            const Icon = Icons[categoria.icon as keyof typeof Icons]
             return (
               <Card className="p-6">
             <div className="flex flex-row items-center justify-between">

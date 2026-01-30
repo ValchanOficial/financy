@@ -1,4 +1,4 @@
-import { BaggageClaim, BookOpen, BriefcaseBusiness, CarFront, Dumbbell, Gift, HeartPulse, House, Mailbox, PawPrint, PiggyBank, ReceiptText, ShoppingCart, Ticket, ToolCase, Utensils } from "lucide-react";
+import { BaggageClaim, BookOpen, BriefcaseBusiness, CarFront, CircleQuestionMark, Dumbbell, Gift, HeartPulse, House, Mailbox, PawPrint, PiggyBank, ReceiptText, ShoppingCart, Ticket, ToolCase, Utensils } from "lucide-react";
 
 const Icons = {
     'BriefcaseBusiness': BriefcaseBusiness,
@@ -17,6 +17,7 @@ const Icons = {
     'BaggageClaim': BaggageClaim,
     'Mailbox': Mailbox,
     'ReceiptText': ReceiptText,
+    'Question': CircleQuestionMark
 };
 
 export default Icons;
